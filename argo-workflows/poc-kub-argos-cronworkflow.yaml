@@ -1,0 +1,74 @@
+apiVersion: argoproj.io/v1alpha1
+kind: CronWorkflow
+metadata:
+  name: poc-kub-argos-scheduled
+  namespace: argo
+spec:
+  schedules:
+    - "*/15 * * * *"
+  timezone: "Asia/Kolkata"
+  suspend: true
+  concurrencyPolicy: "Forbid"
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  workflowSpec:
+    serviceAccountName: argo-workflow-runner
+    entrypoint: visual-test-flow
+
+    templates:
+      - name: visual-test-flow
+        steps:
+          - - name: create-namespace
+              template: kubectl
+              arguments:
+                parameters:
+                  - name: command
+                    value: kubectl create namespace test-pr-1 --dry-run=client -o yaml | kubectl apply -f -
+          - - name: deploy-app
+              template: kubectl
+              arguments:
+                parameters:
+                  - name: command
+                    value: kubectl apply -n test-pr-1 -f https://raw.githubusercontent.com/prosenjitsengupta919-rgb/poc-kub-argos/main/k8s/deployment.yaml && kubectl apply -n test-pr-1 -f https://raw.githubusercontent.com/prosenjitsengupta919-rgb/poc-kub-argos/main/k8s/service.yaml
+          - - name: wait-for-app
+              template: kubectl
+              arguments:
+                parameters:
+                  - name: command
+                    value: kubectl -n test-pr-1 rollout status deployment/poc-kub-argos --timeout=120s
+          - - name: run-visual-test
+              template: playwright
+          - - name: cleanup
+              template: kubectl
+              arguments:
+                parameters:
+                  - name: command
+                    value: kubectl delete namespace test-pr-1 --ignore-not-found=true
+
+      - name: kubectl
+        inputs:
+          parameters:
+            - name: command
+        container:
+          image: bitnami/kubectl:latest
+          command: [sh, -c]
+          args: ["{{inputs.parameters.command}}"]
+
+      - name: playwright
+        container:
+          image: mcr.microsoft.com/playwright:v1.61.0-noble
+          command: [sh, -c]
+          env:
+            - name: CI
+              value: "true"
+            - name: ARGOS_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: argos-token
+                  key: ARGOS_TOKEN
+          args:
+            - |
+              git clone --branch main --depth 1 https://github.com/prosenjitsengupta919-rgb/poc-kub-argos.git /workspace/source
+              cd /workspace/source
+              npm ci
+              PLAYWRIGHT_BASE_URL=http://poc-kub-argos.test-pr-1.svc.cluster.local npm run test:visual:ci

@@ -1,0 +1,24 @@
+apiVersion: testinfra.poc/v1alpha1
+kind: TestPackage
+metadata:
+  name: next-ui-visual
+  owner: demo
+spec:
+  trigger:
+    - onPullRequest
+  target:
+    app:
+      name: poc-kub-argos
+      image: poc-kub-argos:latest
+      servicePort: 80
+      containerPort: 3000
+  source:
+    repo: https://github.com/prosenjitsengupta919-rgb/poc-kub-argos.git
+    ref: main
+    path: .
+  runner:
+    type: playwright
+    image: mcr.microsoft.com/playwright:v1.61.0-noble
+    command: npm run test:visual:ci
+  notifications:
+    argos: true
