@@ -16,7 +16,7 @@ export default function Home() {
       <section className="topbar" aria-label="Project status">
         <div>
           <p className="eyebrow">POC workspace</p>
-          <h1>Kube Argos1 Control</h1>
+          <h1>Kube Argos2 Control</h1>
         </div>
         <div className="status-pill">
           <span className="pulse" />
