@@ -1,0 +1,12 @@
+node_modules
+.next
+.git
+.gitignore
+Dockerfile
+README.md
+npm-debug.log*
+playwright-report
+test-results
+coverage
+.DS_Store
+.env*.local

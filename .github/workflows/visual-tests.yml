@@ -1,0 +1,38 @@
+name: Visual Tests
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  argos:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Build app
+        run: npm run build
+
+      - name: Run visual tests
+        run: npm run test:visual:ci
+        env:
+          ARGOS_TOKEN: ${{ secrets.ARGOS_TOKEN }}
