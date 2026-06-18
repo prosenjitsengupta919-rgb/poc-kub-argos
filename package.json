@@ -8,7 +8,11 @@
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "test:visual": "playwright test --headed",
-    "test:visual:ci": "playwright test"
+    "test:visual:ci": "playwright test",
+    "render:test-package": "node scripts/render-test-package.mjs",
+    "deploy:test-package": "node scripts/deploy-test-package.mjs",
+    "test:deployed": "node scripts/run-deployed-visual-test.mjs",
+    "cleanup:test-package": "node scripts/cleanup-test-package.mjs"
   },
   "dependencies": {
     "next": "latest",
@@ -21,6 +25,7 @@
     "@types/node": "latest",
     "@types/react": "latest",
     "@types/react-dom": "latest",
-    "typescript": "latest"
+    "typescript": "latest",
+    "yaml": "^2.9.0"
   }
 }

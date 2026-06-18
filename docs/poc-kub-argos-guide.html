@@ -1,0 +1,1235 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>poc-kub-argos End-to-End Guide</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f7f9fb;
+        --panel: #ffffff;
+        --text: #1f2933;
+        --muted: #5f6f7c;
+        --border: #d8e0e7;
+        --accent: #087ea4;
+        --accent-soft: #e6f6fb;
+        --code-bg: #101820;
+        --code-text: #e6edf3;
+        --warn-bg: #fff7e6;
+        --warn-border: #f5c76b;
+        --ok-bg: #eaf8ef;
+        --ok-border: #7ccf9a;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", sans-serif;
+        line-height: 1.6;
+      }
+
+      header {
+        background: #13232f;
+        color: white;
+        padding: 42px 24px;
+      }
+
+      header .wrap,
+      main {
+        max-width: 1120px;
+        margin: 0 auto;
+      }
+
+      h1 {
+        margin: 0 0 10px;
+        font-size: 34px;
+        line-height: 1.15;
+      }
+
+      h2 {
+        margin-top: 42px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid var(--border);
+        font-size: 25px;
+      }
+
+      h3 {
+        margin-top: 28px;
+        font-size: 19px;
+      }
+
+      h4 {
+        margin-bottom: 6px;
+        font-size: 16px;
+      }
+
+      main {
+        padding: 28px 24px 64px;
+      }
+
+      section,
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 22px;
+        margin: 18px 0;
+      }
+
+      section section {
+        border: 0;
+        padding: 0;
+      }
+
+      p {
+        margin: 10px 0;
+      }
+
+      .subtitle {
+        max-width: 820px;
+        margin: 0;
+        color: #d9e6ee;
+        font-size: 17px;
+      }
+
+      .toc {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 10px;
+      }
+
+      .toc a {
+        display: block;
+        padding: 10px 12px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        color: var(--accent);
+        text-decoration: none;
+        background: #fbfdff;
+      }
+
+      code {
+        padding: 2px 5px;
+        border-radius: 4px;
+        background: #eef3f7;
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+        font-size: 0.92em;
+      }
+
+      pre {
+        overflow-x: auto;
+        padding: 15px;
+        border-radius: 7px;
+        background: var(--code-bg);
+        color: var(--code-text);
+        font-size: 13px;
+        line-height: 1.55;
+      }
+
+      pre code {
+        padding: 0;
+        background: transparent;
+        color: inherit;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 12px 0 20px;
+      }
+
+      th,
+      td {
+        vertical-align: top;
+        border: 1px solid var(--border);
+        padding: 10px;
+        text-align: left;
+      }
+
+      th {
+        background: #eef4f8;
+      }
+
+      ul,
+      ol {
+        padding-left: 22px;
+      }
+
+      .note,
+      .success,
+      .warning {
+        border-radius: 7px;
+        padding: 14px 16px;
+        margin: 14px 0;
+      }
+
+      .note {
+        background: var(--accent-soft);
+        border: 1px solid #9ed8e8;
+      }
+
+      .success {
+        background: var(--ok-bg);
+        border: 1px solid var(--ok-border);
+      }
+
+      .warning {
+        background: var(--warn-bg);
+        border: 1px solid var(--warn-border);
+      }
+
+      .flow {
+        display: grid;
+        gap: 8px;
+        margin: 12px 0;
+      }
+
+      .flow div {
+        padding: 10px 12px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background: #fbfdff;
+      }
+
+      .small {
+        color: var(--muted);
+        font-size: 14px;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="wrap">
+        <h1>poc-kub-argos End-to-End Guide</h1>
+        <p class="subtitle">
+          A detailed walkthrough of the POC: TestPackage YAML, render script,
+          Kubernetes test namespace, headed and CI visual tests, Argo CD, Argo
+          Workflows, CronWorkflow, and Argos upload.
+        </p>
+      </div>
+    </header>
+
+    <main>
+      <section id="toc">
+        <h2>Table Of Contents</h2>
+        <div class="toc">
+          <a href="#goal">1. End Goal</a>
+          <a href="#architecture">2. Architecture</a>
+          <a href="#prerequisites">3. Prerequisites</a>
+          <a href="#step2">4. Step 2: TestPackage YAML</a>
+          <a href="#step3">5. Step 3: Render Script</a>
+          <a href="#step4">6. Step 4: Deploy Namespace</a>
+          <a href="#step5">7. Step 5: Visual Test</a>
+          <a href="#step6">8. Step 6: Cleanup</a>
+          <a href="#argocd">9. Step 7: Argo CD</a>
+          <a href="#workflows">10. Step 8: Argo Workflows</a>
+          <a href="#cron">11. CronWorkflow</a>
+          <a href="#argos">12. Argos Token</a>
+          <a href="#troubleshooting">13. Troubleshooting</a>
+          <a href="#roadmap">14. Roadmap</a>
+        </div>
+      </section>
+
+      <section id="goal">
+        <h2>1. End Goal</h2>
+        <p>
+          The final system should automatically test pull requests in isolated
+          Kubernetes environments.
+        </p>
+        <div class="flow">
+          <div>PR opened or updated</div>
+          <div>Create namespace such as <code>test-pr-25</code></div>
+          <div>Deploy the PR version of the app into that namespace</div>
+          <div>Run Playwright visual tests against the deployed app</div>
+          <div>Upload screenshots and visual comparison results to Argos</div>
+          <div>Report pass or fail back to the PR</div>
+          <div>Delete the temporary namespace</div>
+        </div>
+        <p>
+          The current POC proves the pieces manually first. Later, hardcoded
+          values like <code>main</code>, <code>test-pr-1</code>, and
+          <code>poc-kub-argos:latest</code> will become PR-driven parameters.
+        </p>
+      </section>
+
+      <section id="architecture">
+        <h2>2. Architecture</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Tool</th>
+              <th>Role In This POC</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>Kubernetes</code></td>
+              <td>Runs the application pod, service, test namespace, and workflow pods.</td>
+            </tr>
+            <tr>
+              <td><code>Docker</code></td>
+              <td>Builds the app image <code>poc-kub-argos:latest</code>.</td>
+            </tr>
+            <tr>
+              <td><code>Playwright</code></td>
+              <td>Opens the app and captures visual screenshots.</td>
+            </tr>
+            <tr>
+              <td><code>Argos</code></td>
+              <td>Stores visual test screenshots and compares builds.</td>
+            </tr>
+            <tr>
+              <td><code>Argo CD</code></td>
+              <td>Watches Git and keeps stable Kubernetes app manifests synced.</td>
+            </tr>
+            <tr>
+              <td><code>Argo Workflows</code></td>
+              <td>Runs the temporary PR-style pipeline: deploy, test, cleanup.</td>
+            </tr>
+            <tr>
+              <td><code>CronWorkflow</code></td>
+              <td>Runs the workflow on a schedule.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="prerequisites">
+        <h2>3. Prerequisites</h2>
+        <p>Run all commands from the repository root:</p>
+        <pre><code>cd /Users/prosenjitsengupta/Downloads/poc-kub-argos</code></pre>
+
+        <h3>Required Tools</h3>
+        <ul>
+          <li>Docker Desktop with Kubernetes enabled</li>
+          <li><code>kubectl</code></li>
+          <li>Node.js and npm</li>
+          <li>Browser access to Argo CD, Argo Workflows, and Argos</li>
+        </ul>
+
+        <h3>Verify Kubernetes Context</h3>
+        <pre><code>kubectl config current-context</code></pre>
+        <table>
+          <thead>
+            <tr>
+              <th>Part</th>
+              <th>Meaning</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>kubectl</code></td>
+              <td>Kubernetes command line tool.</td>
+            </tr>
+            <tr>
+              <td><code>config</code></td>
+              <td>Work with Kubernetes client configuration.</td>
+            </tr>
+            <tr>
+              <td><code>current-context</code></td>
+              <td>Prints which cluster <code>kubectl</code> will talk to.</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>For this local POC, the context is usually <code>docker-desktop</code>.</p>
+      </section>
+
+      <section id="step2">
+        <h2>4. Step 2: Add TestPackage YAML</h2>
+        <p>
+          The TestPackage YAML is a small instruction file. It is like a test
+          order form. It says which app to deploy, which image to use, where the
+          tests live, and what command should run them.
+        </p>
+        <p>File:</p>
+        <pre><code>test-packages/demo/next-ui.yaml</code></pre>
+        <pre><code>apiVersion: testinfra.poc/v1alpha1
+kind: TestPackage
+metadata:
+  name: next-ui-visual
+  owner: demo
+spec:
+  trigger:
+    - onPullRequest
+  target:
+    app:
+      name: poc-kub-argos
+      image: poc-kub-argos:latest
+      servicePort: 80
+      containerPort: 3000
+  source:
+    repo: https://github.com/prosenjitsengupta919-rgb/poc-kub-argos.git
+    ref: main
+    path: .
+  runner:
+    type: playwright
+    image: mcr.microsoft.com/playwright:v1.61.0-noble
+    command: npm run test:visual:ci
+  notifications:
+    argos: true</code></pre>
+
+        <h3>Field Explanation</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Field</th>
+              <th>Meaning</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>apiVersion</code></td>
+              <td>Version of this custom POC contract.</td>
+            </tr>
+            <tr>
+              <td><code>kind</code></td>
+              <td>Declares this document as a <code>TestPackage</code>.</td>
+            </tr>
+            <tr>
+              <td><code>metadata.name</code></td>
+              <td>Name of this test package.</td>
+            </tr>
+            <tr>
+              <td><code>metadata.owner</code></td>
+              <td>Owner label used in generated Kubernetes manifests.</td>
+            </tr>
+            <tr>
+              <td><code>spec.trigger</code></td>
+              <td>Future intent: run when a pull request event happens.</td>
+            </tr>
+            <tr>
+              <td><code>spec.target.app.name</code></td>
+              <td>Kubernetes app, deployment, and service name.</td>
+            </tr>
+            <tr>
+              <td><code>spec.target.app.image</code></td>
+              <td>Docker image Kubernetes should run.</td>
+            </tr>
+            <tr>
+              <td><code>servicePort</code></td>
+              <td>Port exposed by the Kubernetes Service.</td>
+            </tr>
+            <tr>
+              <td><code>containerPort</code></td>
+              <td>Port where the app listens inside the container.</td>
+            </tr>
+            <tr>
+              <td><code>source.repo</code></td>
+              <td>Git repository containing the app and tests.</td>
+            </tr>
+            <tr>
+              <td><code>source.ref</code></td>
+              <td>Git branch or commit to clone. Currently <code>main</code>.</td>
+            </tr>
+            <tr>
+              <td><code>source.path</code></td>
+              <td>Folder inside the repo where commands should run.</td>
+            </tr>
+            <tr>
+              <td><code>runner.type</code></td>
+              <td>Test runner type. Current value is <code>playwright</code>.</td>
+            </tr>
+            <tr>
+              <td><code>runner.image</code></td>
+              <td>Container image used to run the tests in Kubernetes.</td>
+            </tr>
+            <tr>
+              <td><code>runner.command</code></td>
+              <td>Command that starts the test.</td>
+            </tr>
+            <tr>
+              <td><code>notifications.argos</code></td>
+              <td>Signals that visual results should be sent to Argos.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="step3">
+        <h2>5. Step 3: Add Render Script</h2>
+        <p>
+          The render script is the translator. It reads the TestPackage YAML and
+          generates Kubernetes YAML files.
+        </p>
+        <p>Script:</p>
+        <pre><code>scripts/render-test-package.mjs</code></pre>
+        <p>Run:</p>
+        <pre><code>npm run render:test-package</code></pre>
+        <table>
+          <thead>
+            <tr>
+              <th>Part</th>
+              <th>Meaning</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>npm</code></td>
+              <td>Node package manager.</td>
+            </tr>
+            <tr>
+              <td><code>run</code></td>
+              <td>Runs a script from <code>package.json</code>.</td>
+            </tr>
+            <tr>
+              <td><code>render:test-package</code></td>
+              <td>Script alias that runs <code>node scripts/render-test-package.mjs</code>.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <p>Expected output:</p>
+        <pre><code>Rendered test-packages/demo/next-ui.yaml into rendered/test-pr-1
+Apply with: kubectl apply -f rendered/test-pr-1</code></pre>
+
+        <p>Generated files:</p>
+        <pre><code>rendered/test-pr-1/namespace.yaml
+rendered/test-pr-1/deployment.yaml
+rendered/test-pr-1/service.yaml
+rendered/test-pr-1/job.yaml</code></pre>
+
+        <h3>Generated File Meaning</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>File</th>
+              <th>Meaning</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>namespace.yaml</code></td>
+              <td>Creates the temporary isolated test namespace.</td>
+            </tr>
+            <tr>
+              <td><code>deployment.yaml</code></td>
+              <td>Runs the app pod in Kubernetes.</td>
+            </tr>
+            <tr>
+              <td><code>service.yaml</code></td>
+              <td>Gives the app a stable internal network address.</td>
+            </tr>
+            <tr>
+              <td><code>job.yaml</code></td>
+              <td>Describes a test runner job that can clone the repo and run Playwright.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>Custom Namespace Render</h3>
+        <pre><code>npm run render:test-package -- test-packages/demo/next-ui.yaml test-pr-123</code></pre>
+        <table>
+          <thead>
+            <tr>
+              <th>Part</th>
+              <th>Meaning</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>--</code></td>
+              <td>Separates npm arguments from script arguments.</td>
+            </tr>
+            <tr>
+              <td><code>test-packages/demo/next-ui.yaml</code></td>
+              <td>Input TestPackage file.</td>
+            </tr>
+            <tr>
+              <td><code>test-pr-123</code></td>
+              <td>Output namespace name.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="step4">
+        <h2>6. Step 4: Deploy To Namespace <code>test-pr-1</code></h2>
+        <p>
+          This step sends the generated app workload into Kubernetes and waits
+          until the app is running.
+        </p>
+
+        <h3>Build The Docker Image</h3>
+        <pre><code>docker build -t poc-kub-argos:latest .</code></pre>
+        <table>
+          <thead>
+            <tr>
+              <th>Part</th>
+              <th>Meaning</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>docker</code></td>
+              <td>Docker command line tool.</td>
+            </tr>
+            <tr>
+              <td><code>build</code></td>
+              <td>Builds an image from the <code>Dockerfile</code>.</td>
+            </tr>
+            <tr>
+              <td><code>-t</code></td>
+              <td>Tags the image with a human-readable name.</td>
+            </tr>
+            <tr>
+              <td><code>poc-kub-argos:latest</code></td>
+              <td>Image name and tag used by Kubernetes manifests.</td>
+            </tr>
+            <tr>
+              <td><code>.</code></td>
+              <td>Use the current directory as Docker build context.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>Deploy The Test Package</h3>
+        <pre><code>npm run deploy:test-package</code></pre>
+        <p>This script does three things:</p>
+        <ol>
+          <li>Runs the render script.</li>
+          <li>Applies namespace, deployment, and service YAML.</li>
+          <li>Waits for the deployment rollout.</li>
+        </ol>
+
+        <h3>Check The Namespace</h3>
+        <pre><code>kubectl get all -n test-pr-1</code></pre>
+        <table>
+          <thead>
+            <tr>
+              <th>Part</th>
+              <th>Meaning</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>kubectl</code></td>
+              <td>Kubernetes command line tool.</td>
+            </tr>
+            <tr>
+              <td><code>get</code></td>
+              <td>List Kubernetes resources.</td>
+            </tr>
+            <tr>
+              <td><code>all</code></td>
+              <td>Show common resources: pods, services, deployments, replicasets.</td>
+            </tr>
+            <tr>
+              <td><code>-n</code></td>
+              <td>Namespace flag.</td>
+            </tr>
+            <tr>
+              <td><code>test-pr-1</code></td>
+              <td>Temporary namespace created for this test run.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <p>Expected resources:</p>
+        <ul>
+          <li><code>pod/poc-kub-argos-...</code></li>
+          <li><code>service/poc-kub-argos</code></li>
+          <li><code>deployment.apps/poc-kub-argos</code></li>
+          <li><code>replicaset.apps/poc-kub-argos-...</code></li>
+        </ul>
+      </section>
+
+      <section id="step5">
+        <h2>7. Step 5: Run Visual Test Against Deployed App</h2>
+        <p>
+          The important idea is that Playwright should test the app deployed in
+          Kubernetes, not the local Next.js dev server.
+        </p>
+
+        <h3>Headless Scripted Mode</h3>
+        <pre><code>npm run test:deployed</code></pre>
+        <p>
+          This opens a temporary port-forward to the Kubernetes Service and runs
+          the visual test with <code>PLAYWRIGHT_BASE_URL</code> pointing at that
+          port-forward.
+        </p>
+
+        <h3>Headed Mode With Browser Visible</h3>
+        <p>Use two terminals.</p>
+        <h4>Terminal 1</h4>
+        <pre><code>kubectl -n test-pr-1 port-forward service/poc-kub-argos 31080:80</code></pre>
+        <table>
+          <thead>
+            <tr>
+              <th>Part</th>
+              <th>Meaning</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>-n test-pr-1</code></td>
+              <td>Use the temporary test namespace.</td>
+            </tr>
+            <tr>
+              <td><code>port-forward</code></td>
+              <td>Forward local traffic into Kubernetes.</td>
+            </tr>
+            <tr>
+              <td><code>service/poc-kub-argos</code></td>
+              <td>Forward to the Kubernetes Service named <code>poc-kub-argos</code>.</td>
+            </tr>
+            <tr>
+              <td><code>31080:80</code></td>
+              <td>Local port <code>31080</code> forwards to Service port <code>80</code>.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h4>Terminal 2</h4>
+        <pre><code>PLAYWRIGHT_BASE_URL=http://127.0.0.1:31080 npm run test:visual</code></pre>
+        <table>
+          <thead>
+            <tr>
+              <th>Part</th>
+              <th>Meaning</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>PLAYWRIGHT_BASE_URL=...</code></td>
+              <td>Tells Playwright to test the deployed app URL.</td>
+            </tr>
+            <tr>
+              <td><code>npm run test:visual</code></td>
+              <td>Runs Playwright in headed mode.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="step6">
+        <h2>8. Step 6: Cleanup Namespace</h2>
+        <p>
+          Cleanup deletes the temporary namespace and everything inside it.
+        </p>
+        <pre><code>npm run cleanup:test-package</code></pre>
+        <p>Equivalent direct command:</p>
+        <pre><code>kubectl delete namespace test-pr-1</code></pre>
+        <table>
+          <thead>
+            <tr>
+              <th>Part</th>
+              <th>Meaning</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>delete</code></td>
+              <td>Delete Kubernetes resources.</td>
+            </tr>
+            <tr>
+              <td><code>namespace</code></td>
+              <td>The resource type to delete.</td>
+            </tr>
+            <tr>
+              <td><code>test-pr-1</code></td>
+              <td>The temporary namespace name.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <p>Verify cleanup:</p>
+        <pre><code>kubectl get namespace test-pr-1</code></pre>
+        <p>Expected result:</p>
+        <pre><code>Error from server (NotFound): namespaces "test-pr-1" not found</code></pre>
+      </section>
+
+      <section id="argocd">
+        <h2>9. Step 7: Argo CD</h2>
+        <p>
+          Argo CD is GitOps. It watches a Git repository and keeps Kubernetes
+          synced with what is in Git.
+        </p>
+        <div class="note">
+          <strong>Important:</strong> Argo CD is best for stable environments
+          like dev, staging, and production. Argo Workflows is better for
+          temporary PR test namespaces.
+        </div>
+
+        <h3>Install Argo CD</h3>
+        <pre><code>kubectl create namespace argocd</code></pre>
+        <table>
+          <thead>
+            <tr>
+              <th>Part</th>
+              <th>Meaning</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>create namespace</code></td>
+              <td>Create an isolated Kubernetes namespace.</td>
+            </tr>
+            <tr>
+              <td><code>argocd</code></td>
+              <td>Name of the namespace where Argo CD will run.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <pre><code>kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml</code></pre>
+        <table>
+          <thead>
+            <tr>
+              <th>Part</th>
+              <th>Meaning</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>apply</code></td>
+              <td>Create or update resources from YAML.</td>
+            </tr>
+            <tr>
+              <td><code>-n argocd</code></td>
+              <td>Install into the <code>argocd</code> namespace.</td>
+            </tr>
+            <tr>
+              <td><code>-f URL</code></td>
+              <td>Read the install YAML from the official Argo CD GitHub URL.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>Wait For Pods</h3>
+        <pre><code>kubectl -n argocd get pods -w</code></pre>
+        <p>
+          The <code>-w</code> flag watches live changes. Wait until
+          <code>argocd-server</code> is <code>1/1 Running</code>.
+        </p>
+
+        <h3>Open Argo CD UI</h3>
+        <pre><code>kubectl -n argocd port-forward svc/argocd-server 8080:443</code></pre>
+        <p>Open:</p>
+        <pre><code>https://localhost:8080</code></pre>
+        <p>Username:</p>
+        <pre><code>admin</code></pre>
+        <p>Get password:</p>
+        <pre><code>kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64 -d; echo</code></pre>
+
+        <h3>Create Application From UI</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>UI Field</th>
+              <th>Value</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Application Name</td>
+              <td><code>poc-kub-argos</code></td>
+            </tr>
+            <tr>
+              <td>Project</td>
+              <td><code>default</code></td>
+            </tr>
+            <tr>
+              <td>Repository URL</td>
+              <td><code>https://github.com/prosenjitsengupta919-rgb/poc-kub-argos.git</code></td>
+            </tr>
+            <tr>
+              <td>Revision</td>
+              <td><code>main</code></td>
+            </tr>
+            <tr>
+              <td>Path</td>
+              <td><code>k8s</code></td>
+            </tr>
+            <tr>
+              <td>Cluster URL</td>
+              <td><code>https://kubernetes.default.svc</code></td>
+            </tr>
+            <tr>
+              <td>Namespace</td>
+              <td><code>poc-kub-argos</code></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <p>Enable these options for the POC:</p>
+        <ul>
+          <li><code>Auto Sync</code></li>
+          <li><code>Prune Resources</code></li>
+          <li><code>Self Heal</code></li>
+          <li><code>Auto-create Namespace</code></li>
+        </ul>
+
+        <p>If namespace creation fails, create it manually:</p>
+        <pre><code>kubectl create namespace poc-kub-argos</code></pre>
+        <p>Check deployment:</p>
+        <pre><code>kubectl get all -n poc-kub-argos</code></pre>
+      </section>
+
+      <section id="workflows">
+        <h2>10. Step 8: Argo Workflows</h2>
+        <p>
+          Argo Workflows runs the test pipeline. It can create a namespace,
+          deploy the app, run Playwright, upload to Argos, and clean up.
+        </p>
+
+        <h3>Install Argo Workflows</h3>
+        <pre><code>kubectl create namespace argo</code></pre>
+        <pre><code>kubectl apply --server-side -n argo -f https://github.com/argoproj/argo-workflows/releases/latest/download/install.yaml</code></pre>
+        <div class="warning">
+          If normal <code>kubectl apply</code> fails with annotation size errors,
+          use <code>--server-side</code>. If it reports conflicts, use
+          <code>--server-side --force-conflicts</code>.
+        </div>
+
+        <h3>Wait For Pods</h3>
+        <pre><code>kubectl -n argo get pods -w</code></pre>
+        <p>Wait for:</p>
+        <ul>
+          <li><code>argo-server</code> as <code>1/1 Running</code></li>
+          <li><code>workflow-controller</code> as <code>1/1 Running</code></li>
+        </ul>
+
+        <h3>Open Argo Workflows UI</h3>
+        <pre><code>kubectl -n argo port-forward deployment/argo-server 2746:2746</code></pre>
+        <p>Open:</p>
+        <pre><code>https://localhost:2746</code></pre>
+        <p>If port <code>2746</code> is already used, use another local port:</p>
+        <pre><code>kubectl -n argo port-forward deployment/argo-server 2747:2746</code></pre>
+        <p>Then open:</p>
+        <pre><code>https://localhost:2747</code></pre>
+
+        <h3>Create Workflow Runner Permissions</h3>
+        <pre><code>kubectl create serviceaccount argo-workflow-runner -n argo --dry-run=client -o yaml | kubectl apply -f -</code></pre>
+        <table>
+          <thead>
+            <tr>
+              <th>Part</th>
+              <th>Meaning</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>serviceaccount</code></td>
+              <td>Identity used by workflow pods.</td>
+            </tr>
+            <tr>
+              <td><code>argo-workflow-runner</code></td>
+              <td>Name of the workflow service account.</td>
+            </tr>
+            <tr>
+              <td><code>--dry-run=client -o yaml</code></td>
+              <td>Print YAML instead of immediately creating it.</td>
+            </tr>
+            <tr>
+              <td><code>| kubectl apply -f -</code></td>
+              <td>Apply the generated YAML from standard input.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <pre><code>kubectl create clusterrolebinding argo-workflow-runner-admin \
+  --clusterrole=cluster-admin \
+  --serviceaccount=argo:argo-workflow-runner \
+  --dry-run=client -o yaml | kubectl apply -f -</code></pre>
+        <div class="warning">
+          <strong>POC only:</strong> <code>cluster-admin</code> is broad. It is
+          convenient for local learning. A real system should use narrower RBAC.
+        </div>
+
+        <h3>Run One Workflow</h3>
+        <pre><code>kubectl create -f argo-workflows/poc-kub-argos-workflow.yaml</code></pre>
+        <table>
+          <thead>
+            <tr>
+              <th>Part</th>
+              <th>Meaning</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>create</code></td>
+              <td>Create a new resource. Needed because the Workflow uses <code>generateName</code>.</td>
+            </tr>
+            <tr>
+              <td><code>-f</code></td>
+              <td>Read resource YAML from a file.</td>
+            </tr>
+            <tr>
+              <td><code>argo-workflows/poc-kub-argos-workflow.yaml</code></td>
+              <td>The one-time Workflow manifest.</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="note">
+          Use <code>kubectl create</code>, not <code>kubectl apply</code>, for
+          this file because it uses <code>metadata.generateName</code>.
+        </div>
+
+        <h3>Watch Workflow</h3>
+        <pre><code>kubectl -n argo get workflows</code></pre>
+        <pre><code>kubectl -n argo get pods</code></pre>
+        <p>Get logs from the Playwright pod:</p>
+        <pre><code>kubectl -n argo logs &lt;playwright-pod-name&gt; -c main</code></pre>
+      </section>
+
+      <section id="cron">
+        <h2>11. CronWorkflow</h2>
+        <p>
+          A Workflow runs once. A CronWorkflow runs a Workflow repeatedly on a
+          schedule.
+        </p>
+        <p>File:</p>
+        <pre><code>argo-workflows/poc-kub-argos-cronworkflow.yaml</code></pre>
+
+        <h3>Apply CronWorkflow</h3>
+        <pre><code>kubectl apply -f argo-workflows/poc-kub-argos-cronworkflow.yaml</code></pre>
+        <p>Check:</p>
+        <pre><code>kubectl -n argo get cronworkflows</code></pre>
+
+        <h3>Important Fields</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Field</th>
+              <th>Meaning</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>schedules</code></td>
+              <td>List of cron schedules. Current value runs every 15 minutes.</td>
+            </tr>
+            <tr>
+              <td><code>timezone</code></td>
+              <td>Schedule timezone. Current value is <code>Asia/Kolkata</code>.</td>
+            </tr>
+            <tr>
+              <td><code>suspend</code></td>
+              <td>If <code>true</code>, the schedule is paused.</td>
+            </tr>
+            <tr>
+              <td><code>concurrencyPolicy: Forbid</code></td>
+              <td>Do not start a new run if the previous one is still running.</td>
+            </tr>
+            <tr>
+              <td><code>successfulJobsHistoryLimit</code></td>
+              <td>How many successful workflow histories to keep.</td>
+            </tr>
+            <tr>
+              <td><code>failedJobsHistoryLimit</code></td>
+              <td>How many failed workflow histories to keep.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>Start Schedule</h3>
+        <pre><code>kubectl -n argo patch cronworkflow poc-kub-argos-scheduled --type=merge -p '{"spec":{"suspend":false}}'</code></pre>
+        <table>
+          <thead>
+            <tr>
+              <th>Part</th>
+              <th>Meaning</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>patch</code></td>
+              <td>Change part of an existing Kubernetes resource.</td>
+            </tr>
+            <tr>
+              <td><code>cronworkflow</code></td>
+              <td>The resource type being patched.</td>
+            </tr>
+            <tr>
+              <td><code>poc-kub-argos-scheduled</code></td>
+              <td>Name of the CronWorkflow.</td>
+            </tr>
+            <tr>
+              <td><code>--type=merge</code></td>
+              <td>Use merge patch style.</td>
+            </tr>
+            <tr>
+              <td><code>-p '{"spec":{"suspend":false}}'</code></td>
+              <td>Patch body that turns the schedule on.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>Pause Schedule</h3>
+        <pre><code>kubectl -n argo patch cronworkflow poc-kub-argos-scheduled --type=merge -p '{"spec":{"suspend":true}}'</code></pre>
+      </section>
+
+      <section id="argos">
+        <h2>12. Argos Token And Results</h2>
+        <p>
+          The Playwright config uploads to Argos when both conditions are true:
+        </p>
+        <ul>
+          <li><code>CI=true</code></li>
+          <li><code>ARGOS_TOKEN</code> exists</li>
+        </ul>
+
+        <h3>Create Secret</h3>
+        <pre><code>kubectl -n argo create secret generic argos-token --from-literal=ARGOS_TOKEN='&lt;your-argos-token&gt;'</code></pre>
+        <table>
+          <thead>
+            <tr>
+              <th>Part</th>
+              <th>Meaning</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>-n argo</code></td>
+              <td>Create the secret in the namespace where Workflow pods run.</td>
+            </tr>
+            <tr>
+              <td><code>create secret generic</code></td>
+              <td>Create a simple key-value Kubernetes secret.</td>
+            </tr>
+            <tr>
+              <td><code>argos-token</code></td>
+              <td>Name of the secret referenced by workflow YAML.</td>
+            </tr>
+            <tr>
+              <td><code>--from-literal=ARGOS_TOKEN=...</code></td>
+              <td>Create a secret key named <code>ARGOS_TOKEN</code> with your token value.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>Verify Secret Exists</h3>
+        <pre><code>kubectl -n argo get secret argos-token</code></pre>
+
+        <h3>Verify Pod Receives Secret</h3>
+        <pre><code>kubectl -n argo get pod &lt;playwright-pod-name&gt; -o yaml | grep -A8 ARGOS_TOKEN</code></pre>
+        <p>Expected shape:</p>
+        <pre><code>- name: ARGOS_TOKEN
+  valueFrom:
+    secretKeyRef:
+      key: ARGOS_TOKEN
+      name: argos-token</code></pre>
+
+        <h3>Successful Argos Log</h3>
+        <pre><code>✅ Argos build created: https://app.argos-ci.com/prosenjitsengupta919/poc-kub-argos/builds/6</code></pre>
+        <p>
+          This confirms visual screenshots were uploaded. Open the URL to see
+          Argos results.
+        </p>
+      </section>
+
+      <section id="troubleshooting">
+        <h2>13. Troubleshooting</h2>
+
+        <h3>Argo CD Pod Pending</h3>
+        <pre><code>kubectl -n argocd get pods -w</code></pre>
+        <p>
+          If pods are <code>ContainerCreating</code> or
+          <code>PodInitializing</code>, wait. First image pulls can take minutes.
+        </p>
+
+        <h3>Namespace Not Found In Argo CD</h3>
+        <pre><code>kubectl create namespace poc-kub-argos</code></pre>
+        <p>
+          This fixes <code>namespaces "poc-kub-argos" not found</code> if
+          auto-create namespace was not enabled.
+        </p>
+
+        <h3>Port Already In Use</h3>
+        <pre><code>Unable to listen on port 2746: bind: address already in use</code></pre>
+        <p>
+          This means another port-forward is already running. Either stop it
+          with <code>Ctrl + C</code> or use a different local port:
+        </p>
+        <pre><code>kubectl -n argo port-forward deployment/argo-server 2747:2746</code></pre>
+
+        <h3>HTTP Sent To HTTPS Server</h3>
+        <pre><code>Client sent an HTTP request to an HTTPS server.</code></pre>
+        <p>Use:</p>
+        <pre><code>https://localhost:2746</code></pre>
+
+        <h3>Workflow Pod Pending</h3>
+        <pre><code>kubectl -n argo describe pod &lt;pod-name&gt;</code></pre>
+        <p>
+          Check the <code>Events</code> section. For the Playwright image, the
+          first pull can be close to 1 GB and may take several minutes.
+        </p>
+
+        <h3>Argos Token Present But No Upload</h3>
+        <p>Check that the pod has both:</p>
+        <ul>
+          <li><code>ARGOS_TOKEN</code></li>
+          <li><code>CI=true</code></li>
+        </ul>
+        <pre><code>kubectl -n argo get pod &lt;playwright-pod-name&gt; -o yaml | grep -A12 ARGOS_TOKEN</code></pre>
+
+        <h3>Workflow Uses Old Code</h3>
+        <p>
+          The workflow currently clones GitHub <code>main</code>. Local changes
+          are not seen by workflow pods until they are committed and pushed, or
+          until the workflow is changed to clone another branch/ref.
+        </p>
+      </section>
+
+      <section id="roadmap">
+        <h2>14. Roadmap To PR Automation</h2>
+        <p>The current POC is hardcoded. The production-style version needs parameters.</p>
+        <table>
+          <thead>
+            <tr>
+              <th>Current POC</th>
+              <th>Future PR System</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>test-pr-1</code></td>
+              <td><code>test-pr-&lt;PR_NUMBER&gt;</code></td>
+            </tr>
+            <tr>
+              <td><code>main</code></td>
+              <td>PR branch or commit SHA</td>
+            </tr>
+            <tr>
+              <td><code>poc-kub-argos:latest</code></td>
+              <td>PR-specific image tag</td>
+            </tr>
+            <tr>
+              <td>Manual workflow submit</td>
+              <td>Triggered by GitHub PR event</td>
+            </tr>
+            <tr>
+              <td>Argos build URL in logs</td>
+              <td>Argos/GitHub check attached to PR</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>Future Flow</h3>
+        <div class="flow">
+          <div>GitHub PR event arrives</div>
+          <div>Workflow receives <code>prNumber</code>, <code>gitRef</code>, and <code>imageTag</code></div>
+          <div>Create namespace <code>test-pr-&lt;prNumber&gt;</code></div>
+          <div>Deploy image <code>poc-kub-argos:&lt;imageTag&gt;</code></div>
+          <div>Run Playwright against the namespace service</div>
+          <div>Upload to Argos</div>
+          <div>Post status to PR</div>
+          <div>Delete namespace</div>
+        </div>
+
+        <div class="success">
+          Current confirmed milestone: Argo Workflow successfully ran Playwright
+          and created an Argos build URL.
+        </div>
+      </section>
+    </main>
+  </body>
+</html>
